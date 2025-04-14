@@ -4,7 +4,7 @@
         android:label="fps_camera"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:requestLegacyyExternalStorage="true">
+        android:requestLegacyExternalStorage="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"
