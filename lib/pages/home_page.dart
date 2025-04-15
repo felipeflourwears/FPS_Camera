@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:gal/gal.dart';
 import 'package:flutter/material.dart';
 class HomePage extends StatefulWidget{
   const HomePage({super.key});
@@ -6,9 +7,23 @@ class HomePage extends StatefulWidget{
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   List<CameraDescription> cameras = [];
   CameraController? cameraController;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if(cameraController == null || cameraController?.value.isInitialized == false) {
+      return;
+    }
+    
+    if(state == AppLifecycleState.inactive) {
+      cameraController?.dispose();
+    }else if(state == AppLifecycleState.resumed) {
+      _setupCameraController();
+    }
+  }
 
   @override
   void initState() {
@@ -33,7 +48,24 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            CameraPreview(cameraController!),
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.30,
+              width: MediaQuery.sizeOf(context).width * 0.80,
+              child: CameraPreview(cameraController!),
+            ),
+            IconButton(
+              onPressed: () async {
+                XFile picture = await cameraController!.takePicture();
+                Gal.putImage(
+                  picture.path)
+                ;
+              },
+              iconSize: 100, 
+              icon: const Icon(
+                Icons.camera,
+                color: Colors.red,
+              ),
+            )
           ],
           ),
       )
@@ -48,6 +80,9 @@ class _HomePageState extends State<HomePage> {
       cameraController = CameraController(_cameras.first, ResolutionPreset.high);
      });
      cameraController?.initialize().then((_) {
+      if(!mounted) {
+        return;
+      }
        setState(() {});
      });
     }
