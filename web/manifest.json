@@ -1,6 +1,6 @@
 {
-    "name": "fps_camera",
-    "short_name": "fps_camera",
+    "name": "fps",
+    "short_name": "fps",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
