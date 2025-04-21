@@ -1,6 +1,6 @@
 # fps_camera
 
-FPS CAMERA to interact with FAN
+FPS CAMERA to interact with FAN to modify FPS
 
 ## Packages
 https://pub.dev/packages/
@@ -38,7 +38,7 @@ Path: android/app/src/main/AndroidManifest.xml
 
 ```
 
-#### Aplication
+#### Application
 ```bash
 
 android:requestLegacyExternalStorage="true"
