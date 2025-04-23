@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.hypercamera
 
 import android.content.pm.PackageManager
@@ -16,7 +18,14 @@ import androidx.core.content.ContextCompat
 import com.example.hypercamera.ui.theme.HyperCameraTheme
 
 import android.Manifest
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import androidx.compose.foundation.layout.Box
+
 
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +38,23 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             HyperCameraTheme {
+                val scaffoldState = rememberBottomSheetScaffoldState()
+                BottomSheetScaffold(
+                    scaffoldState = scaffoldState,
+                    sheetPeekHeight = 0.dp,
+                    sheetContent = {
 
+                    }
+                ){ padding ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(padding)
+                    ){
+
+                    }
+
+                }
             }
         }
     }
