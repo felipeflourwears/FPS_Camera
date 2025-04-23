@@ -1,56 +1,38 @@
-# fps_camera
+# HYPER CAMERA APP
 
-FPS CAMERA to interact with FAN to modify FPS
+Hyper CAMERA to interact with FAN Shutter Speed
 
 ## Packages
-https://pub.dev/packages/
-```bash
-camera: ^0.11.1
-path_provider: ^2.1.5
 
+### Build.Graddle
+CAMERAX && Compose Material
+```bash
+    //LF IMPLEMENTATION
+    implementation("androidx.compose.material:material:1.8.0")
+
+    // CameraX core library using the camera2 implementation
+    val camerax_version = "1.5.0-alpha06"
+    // The following line is optional, as the core library is included indirectly by camera-camera2
+    implementation("androidx.camera:camera-core:${camerax_version}")
+    implementation("androidx.camera:camera-camera2:${camerax_version}")
+    // If you want to additionally use the CameraX Lifecycle library
+    implementation("androidx.camera:camera-lifecycle:${camerax_version}")
+    // If you want to additionally use the CameraX VideoCapture library
+    implementation("androidx.camera:camera-video:${camerax_version}")
+    // If you want to additionally use the CameraX View class
+    implementation("androidx.camera:camera-view:${camerax_version}")
+    // If you want to additionally add CameraX ML Kit Vision Integration
+    implementation("androidx.camera:camera-mlkit-vision:${camerax_version}")
+    // If you want to additionally use the CameraX Extensions library
+    implementation("androidx.camera:camera-extensions:${camerax_version}")
 ```
 
-## MainActivity.kt
-MainActivity.kt, you define the channel and the native code that runs when Flutter calls a method, like saving a file to the gallery.
+## Permissions from Android Manifest
 ```bash
-android/app/src/main/kotlin/com/example/video_recorder_app/MainActivity.kt
-com.example.fps/video
-```
-## Method Channel
-MethodChannel is used to communicate between Flutter and native code (Android/iOS). For example, from Dart you can say "save this video" and Android (Kotlin) will do it.
+<uses-feature
+    android:name="android.hardware.camera"
+    android:required="false" />
 
-## Add some permissions
-
-### Android
-Path: android/app/src/main/AndroidManifest.xml
-
-```bash
-
- <!-- Permissions -->
-<uses-permission android:name="android.permission.CAMERA" />
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-
-<!-- Requisitos de hardware -->
-<uses-feature android:name="android.hardware.camera" />
-<uses-feature android:name="android.hardware.camera.autofocus" />
-
-```
-
-#### Application
-```bash
-
-android:requestLegacyExternalStorage="true"
-
-```
-
-
-# Package Modify according to IOS System or Android
-```bash
-IOS --> 
-Info.plist
-
-Android -->
-AndroidManifest.xml
+<uses-permission android:name="android.permission.CAMERA"/>
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
 ```
