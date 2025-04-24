@@ -6,6 +6,7 @@ import CameraPreview
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -24,9 +25,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.CameraRoll
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -103,7 +104,7 @@ class MainActivity : ComponentActivity() {
                                 .offset(16.dp, 16.dp)
                         ){
                             Icon(
-                                imageVector = Icons.Default.Refresh,
+                                imageVector = Icons.Default.Cameraswitch,
                                 contentDescription = "Switch Camera"
                             )
                         }
@@ -123,17 +124,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.AccountBox,
-                                    contentDescription = "Open Gallery"
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AccountBox,
+                                    imageVector = Icons.Default.CameraRoll,
                                     contentDescription = "Open Gallery"
                                 )
                             }
@@ -146,7 +137,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Check,
+                                    imageVector = Icons.Default.Camera,
                                     contentDescription = "Take a photo"
                                 )
                             }
@@ -168,7 +159,22 @@ class MainActivity : ComponentActivity() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     super.onCaptureSuccess(image)
 
-                    onPhotoTaken(image.toBitmap())
+                    val matrix = Matrix().apply{
+                        postRotate(image.imageInfo.rotationDegrees.toFloat())
+                        postScale(-1f, 1f)
+                    }
+                    val rotatedBitmap = Bitmap.createBitmap(
+                        image.toBitmap(),
+                        0,
+                        0,
+                        image.width,
+                        image.height,
+                        matrix,
+                        true
+                    )
+
+
+                    onPhotoTaken(rotatedBitmap)
                 }
                 override fun onError(exception: ImageCaptureException) {
                     super.onError(exception)
