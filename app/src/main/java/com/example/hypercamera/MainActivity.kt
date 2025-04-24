@@ -31,42 +31,56 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraRoll
-import androidx.compose.material.icons.filled.Cameraswitch
-import androidx.compose.material.icons.filled.Photo
-import androidx.compose.material.icons.filled.PhotoCamera
-import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hypercamera.ui.theme.HyperCameraTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.Photo
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 
 
 class MainActivity : ComponentActivity() {
 
     private var recording: Recording? = null
 
+    // Estado para saber si está grabando
+    private val isRecordingState = mutableStateOf(false)
+
+    // Estado para el tiempo de grabación
+    private val recordingTimeState = mutableStateOf(0)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!hasRequiredPermissions()){
+        if (!hasRequiredPermissions()) {
             ActivityCompat.requestPermissions(
                 this, CAMERAX_PERMISSIONS, 0
             )
@@ -76,16 +90,15 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
                 val scaffoldState = rememberBottomSheetScaffoldState()
                 val controller = remember {
-                    LifecycleCameraController(applicationContext).apply{
+                    LifecycleCameraController(applicationContext).apply {
                         setEnabledUseCases(
                             CameraController.IMAGE_CAPTURE or
-                                CameraController.VIDEO_CAPTURE
+                                    CameraController.VIDEO_CAPTURE
                         )
                     }
                 }
                 val viewModel = viewModel<MainViewModel>()
                 val bitmaps by viewModel.bitmaps.collectAsState()
-
 
                 BottomSheetScaffold(
                     scaffoldState = scaffoldState,
@@ -168,6 +181,26 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                         }
+
+                        // Mostrar el tiempo de grabación y mensaje de grabación
+                        if (isRecordingState.value) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopCenter)
+                                    .padding(top = 48.dp)
+                                    .background(Color(0x99000000), shape = MaterialTheme.shapes.medium) // Fondo semi-transparente
+                                    .padding(horizontal = 16.dp, vertical = 8.dp) // Relleno alrededor del texto
+                            ) {
+                                Text(
+                                    text = "Recording: ${recordingTimeState.value}s",
+                                    color = Color.White, // Texto blanco para contraste
+                                    style = MaterialTheme.typography.bodyLarge.copy(
+                                        fontWeight = FontWeight.Bold, // Negritas para mayor impacto
+                                        fontSize = 18.sp // Tamaño de fuente ajustado
+                                    )
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -179,6 +212,7 @@ class MainActivity : ComponentActivity() {
         if (recording != null) {
             recording?.stop()
             recording = null
+            isRecordingState.value = false
             return
         }
 
@@ -192,6 +226,18 @@ class MainActivity : ComponentActivity() {
             "my-recording-${System.currentTimeMillis()}.mp4"
         )
 
+        val scope = lifecycleScope // Usa esto para lanzar una corrutina
+        recordingTimeState.value = 0
+        isRecordingState.value = true
+
+        // Inicia un contador del tiempo
+        scope.launch {
+            while (isRecordingState.value) {
+                delay(1000)
+                recordingTimeState.value += 1
+            }
+        }
+
         recording = controller.startRecording(
             FileOutputOptions.Builder(outputFile).build(),
             AudioConfig.create(true),
@@ -199,22 +245,14 @@ class MainActivity : ComponentActivity() {
         ) { event ->
             when (event) {
                 is VideoRecordEvent.Finalize -> {
+                    isRecordingState.value = false
                     if (event.hasError()) {
                         recording?.close()
                         recording = null
-                        Toast.makeText(
-                            applicationContext,
-                            "Video Capture Failed",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast.makeText(applicationContext, "Video Capture Failed", Toast.LENGTH_LONG).show()
                     } else {
-                        // Después de grabar, agregar el video a la galería
                         addVideoToGallery(outputFile)
-                        Toast.makeText(
-                            applicationContext,
-                            "Video Capture Succeeded",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        Toast.makeText(applicationContext, "Video Capture Succeeded", Toast.LENGTH_LONG).show()
                     }
                 }
             }
@@ -229,30 +267,26 @@ class MainActivity : ComponentActivity() {
             null,
             object : MediaScannerConnection.OnScanCompletedListener {
                 override fun onScanCompleted(path: String?, uri: Uri?) {
-                    // El archivo ha sido agregado a la galería
                     Log.d("MainActivity", "Video added to gallery: $path")
                 }
             }
         )
     }
 
-
-
     private fun takePhoto(
         controller: LifecycleCameraController,
         onPhotoTaken: (Bitmap) -> Unit
-    ){
-        if(!hasRequiredPermissions()){
+    ) {
+        if (!hasRequiredPermissions()) {
             return
         }
         controller.takePicture(
             ContextCompat.getMainExecutor(applicationContext),
-            object: OnImageCapturedCallback() {
-                // CTRL + O Generate Callback
+            object : OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     super.onCaptureSuccess(image)
 
-                    val matrix = Matrix().apply{
+                    val matrix = Matrix().apply {
                         postRotate(image.imageInfo.rotationDegrees.toFloat())
                         postScale(-1f, 1f)
                     }
@@ -266,9 +300,9 @@ class MainActivity : ComponentActivity() {
                         true
                     )
 
-
                     onPhotoTaken(rotatedBitmap)
                 }
+
                 override fun onError(exception: ImageCaptureException) {
                     super.onError(exception)
                     Log.e("Camera", "Couldn't take photo: ", exception)
@@ -295,8 +329,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-
     companion object {
         private val CAMERAX_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             arrayOf(
@@ -314,6 +346,3 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
-
-
