@@ -59,6 +59,8 @@ dependencies {
 
     //LF IMPLEMENTATION
     implementation("androidx.compose.material:material:1.8.0")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
     // CameraX core library using the camera2 implementation
     val camerax_version = "1.5.0-alpha06"
