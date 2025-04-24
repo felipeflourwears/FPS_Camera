@@ -3,6 +3,7 @@
 package com.example.hypercamera
 
 import CameraPreview
+import SliderExample
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
@@ -57,6 +58,7 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Environment
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.Photo
@@ -66,6 +68,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.shadow
 
 
 class MainActivity : ComponentActivity() {
@@ -122,12 +127,12 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxSize()
                         )
 
-                        IconButton(
+                        /* IconButton(
                             onClick = {
                                 controller.cameraSelector =
                                     if(controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA){
                                         CameraSelector.DEFAULT_FRONT_CAMERA
-                                    } else CameraSelector.DEFAULT_BACK_CAMERA
+                                   } else CameraSelector.DEFAULT_BACK_CAMERA
                             },
                             modifier = Modifier
                                 .offset(16.dp, 16.dp)
@@ -136,7 +141,38 @@ class MainActivity : ComponentActivity() {
                                 imageVector = Icons.Default.Cameraswitch,
                                 contentDescription = "Switch Camera"
                             )
+                        } */
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "",
+                                color = Color.White,
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+
+                            // Slider está ahora arriba del botón de grabación
+                            SliderExample(
+                                minValue = 1f / 62f,  // Esto mapea 1/62
+                                maxValue = 1f / 40f,  // Esto mapea 1/40
+                                initialValue = 1f / 50f,  // Valor inicial, ajustable
+                                onValueChange = { newValue ->
+                                    // Puedes mapear esto a un valor de shutter speed real si lo deseas
+                                }
+                            )
+
+
                         }
+
 
                         Row(
                             modifier = Modifier
@@ -145,7 +181,7 @@ class MainActivity : ComponentActivity() {
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceAround
                         ){
-                            IconButton(
+                            /* IconButton(
                                 onClick = {
                                     scope.launch {
                                         scaffoldState.bottomSheetState.expand()
@@ -156,8 +192,8 @@ class MainActivity : ComponentActivity() {
                                     imageVector = Icons.Default.Photo,
                                     contentDescription = "Open Gallery"
                                 )
-                            }
-                            IconButton(
+                            } */
+                            /* IconButton(
                                 onClick = {
                                     takePhoto(
                                         controller = controller,
@@ -169,34 +205,39 @@ class MainActivity : ComponentActivity() {
                                     imageVector = Icons.Default.PhotoCamera,
                                     contentDescription = "Take a photo"
                                 )
-                            }
+                            } */
                             IconButton(
-                                onClick = {
-                                    recordVideo(controller)
-                                }
+                                onClick = { recordVideo(controller) },
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(64.dp)
+                                    .shadow(elevation = 8.dp, shape = CircleShape)
+                                    .background(color = Color.Red, shape = CircleShape)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Videocam,
-                                    contentDescription = "Record video"
+                                    contentDescription = "Grabar video",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
                                 )
                             }
                         }
 
-                        // Mostrar el tiempo de grabación y mensaje de grabación
+
                         if (isRecordingState.value) {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.TopCenter)
                                     .padding(top = 48.dp)
-                                    .background(Color(0x99000000), shape = MaterialTheme.shapes.medium) // Fondo semi-transparente
-                                    .padding(horizontal = 16.dp, vertical = 8.dp) // Relleno alrededor del texto
+                                    .background(Color(0x99000000), shape = MaterialTheme.shapes.medium)
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
                                 Text(
                                     text = "Recording: ${recordingTimeState.value}s",
-                                    color = Color.White, // Texto blanco para contraste
+                                    color = Color.White,
                                     style = MaterialTheme.typography.bodyLarge.copy(
-                                        fontWeight = FontWeight.Bold, // Negritas para mayor impacto
-                                        fontSize = 18.sp // Tamaño de fuente ajustado
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 18.sp
                                     )
                                 )
                             }
@@ -220,7 +261,6 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        // Guardar el archivo en el directorio de películas
         val outputFile = File(
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
             "my-recording-${System.currentTimeMillis()}.mp4"
