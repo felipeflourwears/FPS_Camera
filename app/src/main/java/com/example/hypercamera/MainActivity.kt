@@ -8,6 +8,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -54,6 +55,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hypercamera.ui.theme.HyperCameraTheme
 import kotlinx.coroutines.launch
 import java.io.File
+import android.media.MediaScannerConnection
+import android.net.Uri
+import android.os.Environment
 
 
 class MainActivity : ComponentActivity() {
@@ -171,26 +175,31 @@ class MainActivity : ComponentActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun recordVideo(controller: LifecycleCameraController){
-        if(recording != null){
+    private fun recordVideo(controller: LifecycleCameraController) {
+        if (recording != null) {
             recording?.stop()
             recording = null
             return
         }
 
-        if(!hasRequiredPermissions()){
+        if (!hasRequiredPermissions()) {
             return
         }
 
-        val outputFile = File(filesDir, "my-recording.mp4")
+        // Guardar el archivo en el directorio de películas
+        val outputFile = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES),
+            "my-recording-${System.currentTimeMillis()}.mp4"
+        )
+
         recording = controller.startRecording(
             FileOutputOptions.Builder(outputFile).build(),
             AudioConfig.create(true),
             ContextCompat.getMainExecutor(applicationContext)
-        ){ event ->
-            when(event){
+        ) { event ->
+            when (event) {
                 is VideoRecordEvent.Finalize -> {
-                    if(event.hasError()){
+                    if (event.hasError()) {
                         recording?.close()
                         recording = null
                         Toast.makeText(
@@ -198,10 +207,12 @@ class MainActivity : ComponentActivity() {
                             "Video Capture Failed",
                             Toast.LENGTH_LONG
                         ).show()
-                    }else{
+                    } else {
+                        // Después de grabar, agregar el video a la galería
+                        addVideoToGallery(outputFile)
                         Toast.makeText(
                             applicationContext,
-                            "Video Capture Succeded",
+                            "Video Capture Succeeded",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -209,6 +220,23 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun addVideoToGallery(file: File) {
+        val context = applicationContext
+        MediaScannerConnection.scanFile(
+            context,
+            arrayOf(file.absolutePath),
+            null,
+            object : MediaScannerConnection.OnScanCompletedListener {
+                override fun onScanCompleted(path: String?, uri: Uri?) {
+                    // El archivo ha sido agregado a la galería
+                    Log.d("MainActivity", "Video added to gallery: $path")
+                }
+            }
+        )
+    }
+
+
 
     private fun takePhoto(
         controller: LifecycleCameraController,
@@ -250,19 +278,40 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun hasRequiredPermissions(): Boolean {
-        return CAMERAX_PERMISSIONS.all {
-            ContextCompat.checkSelfPermission(
-                applicationContext,
-                it
-            ) == PackageManager.PERMISSION_GRANTED
+        val permissions = mutableListOf(
+            Manifest.permission.CAMERA,
+            Manifest.permission.RECORD_AUDIO
+        )
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissions += "android.permission.READ_MEDIA_VIDEO"
+            permissions += "android.permission.READ_MEDIA_IMAGES"
+        } else {
+            permissions += Manifest.permission.WRITE_EXTERNAL_STORAGE
+        }
+
+        return permissions.all {
+            ContextCompat.checkSelfPermission(this, it) == PackageManager.PERMISSION_GRANTED
         }
     }
 
-    companion object{
-        private val CAMERAX_PERMISSIONS = arrayOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO,
-        )
+
+
+    companion object {
+        private val CAMERAX_PERMISSIONS = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.READ_MEDIA_VIDEO,
+                Manifest.permission.READ_MEDIA_IMAGES
+            )
+        } else {
+            arrayOf(
+                Manifest.permission.CAMERA,
+                Manifest.permission.RECORD_AUDIO,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+        }
     }
 }
 
