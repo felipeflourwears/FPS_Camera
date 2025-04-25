@@ -18,7 +18,12 @@ fun SliderExample(
     var sliderValue by remember { mutableStateOf(initialValue) }
 
     // Calcular el valor de shutter speed (1/valor)
-    val shutterSpeed = "1/${(1 / sliderValue).toInt()}" // Muestra como 1/62, 1/40, etc.
+    val shutterSpeed = if (sliderValue != 0f) {
+        "1/${(1 / sliderValue).toInt()}"
+    } else {
+        "1/∞"
+    }
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

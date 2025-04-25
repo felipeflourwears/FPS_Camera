@@ -18,4 +18,18 @@ class MainViewModel: ViewModel() {
     fun updateShutterSpeed(value: Float) {
         _shutterSpeed.value = value
     }
+
+    private val _isRecording = MutableStateFlow(false)
+    val isRecording = _isRecording.asStateFlow()
+
+    private val _recordingTime = MutableStateFlow(0)
+    val recordingTime = _recordingTime.asStateFlow()
+
+    fun setRecordingState(value: Boolean) {
+        _isRecording.value = value
+    }
+
+    fun setRecordingTime(value: Int) {
+        _recordingTime.value = value
+    }
 }
